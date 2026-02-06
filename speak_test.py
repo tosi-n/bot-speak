@@ -7,9 +7,9 @@ UART_RX_CHAR_UUID = "6E400002-B5A3-F393-E0A9-E50E24DCCA9E" # We write to this
 UART_TX_CHAR_UUID = "6E400003-B5A3-F393-E0A9-E50E24DCCA9E" # We read from this
 
 async def run():
-    print("Scanning for 'Pico_Robot'...")
+    print("Scanning for 'Pico_Agent'...")
     device = await BleakScanner.find_device_by_filter(
-        lambda d, ad: d.name and "Pico_Robot" in d.name
+        lambda d, ad: d.name and "Pico_Agent" in d.name
     )
 
     if not device:

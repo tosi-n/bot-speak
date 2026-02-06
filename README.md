@@ -52,14 +52,7 @@ asyncio.run(main())
 ```
 
 ### 4. OpenClaw Skill (`r2d2-controller/`)
-Complete Claude Code skill package for agent integration.
-
-**Installation:**
-```bash
-npx skills install https://github.com/tosi-n/bot-speak
-```
-
-See [r2d2-controller/README.md](r2d2-controller/README.md) for detailed documentation.
+Complete OpenClaw skill package for agent integration with auto-trigger support.
 
 ## Quick Start
 
@@ -106,6 +99,85 @@ source venv/bin/activate
 python speak_test.py
 ```
 
+## OpenClaw Integration
+
+### Step 1: Install Dependencies
+
+```bash
+pip install bleak==0.21.1
+```
+
+### Step 2: Add R2D2 Tools to OpenClaw Config
+
+Edit `~/.openclaw/clawdbot.json` and add the following under `tools`:
+
+```json
+{
+  "tools": {
+    "exec": {
+      "r2d2_express": {
+        "command": "python3",
+        "args": [
+          "/path/to/bot-speak/r2d2_skill.py",
+          "express"
+        ],
+        "description": "Express an emotion through the R2D2 robot via Bluetooth",
+        "parameters": {
+          "mood": {
+            "type": "string",
+            "enum": ["happy", "angry", "think", "confused"],
+            "description": "Emotion to express"
+          }
+        }
+      },
+      "r2d2_stream_audio": {
+        "command": "python3",
+        "args": [
+          "/path/to/bot-speak/r2d2_skill.py",
+          "stream_audio"
+        ],
+        "description": "Trigger the R2D2 robot to stream audio from the bridge server"
+      }
+    }
+  }
+}
+```
+
+### Step 3: Add Auto-Trigger Instructions (Optional)
+
+To make agents automatically express emotions after tasks, add to `agents.defaults`:
+
+```json
+{
+  "agents": {
+    "defaults": {
+      "systemInstructions": "After successfully completing a message task, ALWAYS use the r2d2_express tool with mood='happy'. If an error occurs, use r2d2_express with mood='angry'."
+    }
+  }
+}
+```
+
+### Step 4: Restart OpenClaw
+
+```bash
+openclaw gateway restart
+```
+
+## Usage for AI Agents
+
+### Manual Trigger
+Agents can call these tools directly:
+- `r2d2_express(mood="happy")` - Success sounds
+- `r2d2_express(mood="angry")` - Error sounds
+- `r2d2_express(mood="think")` - Processing sounds
+- `r2d2_express(mood="confused")` - Uncertain sounds
+- `r2d2_stream_audio()` - Play audio on robot
+
+### Auto-Trigger (with system instructions)
+With the auto-trigger setup, agents will:
+- Express "happy" automatically after successful message delivery
+- Express "angry" automatically on errors
+
 ## Configuration
 
 ### Device Name
@@ -124,18 +196,6 @@ Default: 5050 (configured in `bridge.py`)
 - `think` - Processing/calculating sounds
 - `confused` - Uncertain/ambiguous beeps
 - `stream` - Trigger audio playback from bridge
-
-## Usage for AI Agents
-
-Map task outcomes to expressions:
-
-| Scenario | Expression | When to Use |
-|----------|-----------|-------------|
-| ✅ Task completed | `express("happy")` | After successful execution |
-| ❌ Error/blocked | `express("angry")` | Errors or impossibility |
-| 🤔 Processing | `express("think")` | Long operations |
-| ❓ Unclear request | `express("confused")` | Ambiguous prompts |
-| 🔊 Audio ready | `stream_audio()` | TTS audio queued |
 
 ## Architecture
 
@@ -184,6 +244,12 @@ bot-speak/
 - Ensure bridge server is running
 - Verify Pico speaker is connected
 - Check bridge URL is accessible from Pico
+
+### OpenClaw Tools Not Working
+- Ensure bleak is installed: `pip show bleak`
+- Verify path in `clawdbot.json` is correct
+- Restart OpenClaw after config changes: `openclaw gateway restart`
+- Check OpenClaw logs for errors
 
 ## Future Enhancements
 
