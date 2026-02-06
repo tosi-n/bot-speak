@@ -87,7 +87,7 @@ if __name__ == "__main__":
 
     # Check if bleak is available
     try:
-        from bleak import __version__
+        import bleak
     except ImportError:
         print("Error: bleak library not installed")
         print("Install with: pip install bleak==0.21.1")
