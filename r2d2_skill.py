@@ -21,9 +21,16 @@ class R2D2Controller:
     async def connect(self):
         """Finds and connects to the robot. Must be called before commands."""
         print(f"🤖 R2D2 Skill: Scanning for '{DEVICE_NAME}'...")
-        self.device = await BleakScanner.find_device_by_filter(
-            lambda d, ad: d.name and DEVICE_NAME in d.name
-        )
+
+        # Use discover() instead of find_device_by_filter for better reliability
+        devices = await BleakScanner.discover(timeout=5.0)
+
+        # Search for device with matching name
+        self.device = None
+        for d in devices:
+            if d.name and DEVICE_NAME in d.name:
+                self.device = d
+                break
 
         if not self.device:
             raise ConnectionError(f"❌ Robot '{DEVICE_NAME}' not found. Is it powered on?")
@@ -77,6 +84,14 @@ class R2D2Controller:
 # --- CLI INTERFACE ---
 if __name__ == "__main__":
     import sys
+
+    # Check if bleak is available
+    try:
+        from bleak import __version__
+    except ImportError:
+        print("Error: bleak library not installed")
+        print("Install with: pip install bleak==0.21.1")
+        sys.exit(1)
 
     async def main():
         if len(sys.argv) < 2:
