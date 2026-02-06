@@ -74,14 +74,44 @@ class R2D2Controller:
         await self._send("stream")
         return "Robot started audio stream."
 
-# --- FOR TESTING ONLY ---
+# --- CLI INTERFACE ---
 if __name__ == "__main__":
-    async def test():
-        bot = R2D2Controller()
-        await bot.connect()
-        await bot.express("happy")
-        await asyncio.sleep(2)
-        await bot.express("think")
-        await bot.disconnect()
+    import sys
 
-    asyncio.run(test())
+    async def main():
+        if len(sys.argv) < 2:
+            print("Usage:")
+            print("  python r2d2_skill.py express <mood>")
+            print("  python r2d2_skill.py stream_audio")
+            print("")
+            print("Moods: happy, angry, think, confused")
+            sys.exit(1)
+
+        command = sys.argv[1].lower()
+        bot = R2D2Controller()
+
+        try:
+            await bot.connect()
+
+            if command == "express":
+                if len(sys.argv) < 3:
+                    print("Error: 'express' requires a mood argument")
+                    print("Example: python r2d2_skill.py express happy")
+                    sys.exit(1)
+                mood = sys.argv[2]
+                result = await bot.express(mood)
+                print(result)
+
+            elif command == "stream_audio":
+                result = await bot.stream_audio()
+                print(result)
+
+            else:
+                print(f"Error: Unknown command '{command}'")
+                print("Valid commands: express, stream_audio")
+                sys.exit(1)
+
+        finally:
+            await bot.disconnect()
+
+    asyncio.run(main())
